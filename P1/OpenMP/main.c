@@ -80,13 +80,15 @@ void evaluate(tree_t * T, result_t *result)
                         result->PV[j+1] = child_result.PV[j];
                     
                     result->PV[0] = moves[i];
+
+                	T->alpha = MAX(T->alpha, child_score); 
                 }
 
                 // break is not allowed in basic parallelisme
                 //if (ALPHA_BETA_PRUNING && child_score >= T->beta)
                 //    break;    
 
-                T->alpha = MAX(T->alpha, child_score); 
+
                 }
 
             }
