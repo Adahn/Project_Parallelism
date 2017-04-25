@@ -55,6 +55,8 @@ void evaluate(tree_t * T, result_t *result)
         #pragma omp parallel
         #pragma omp single nowait
         for (int i = 0; i < n_moves; i++) {
+
+        	
     		tree_t child;
             result_t child_result;
                 
@@ -70,28 +72,28 @@ void evaluate(tree_t * T, result_t *result)
 
                 #pragma omp critical
                 {
-                // if obtained score is better than existing score, replace it
-                if (child_score > result->score) {
-                    result->score = child_score;
-                    result->best_move = moves[i];
-                    result->pv_length = child_result.pv_length + 1;
-                    
-                    for(int j = 0; j < child_result.pv_length; j++)
-                        result->PV[j+1] = child_result.PV[j];
-                    
-                    result->PV[0] = moves[i];
+	                // if obtained score is better than existing score, replace it
+	                if (child_score > result->score) {
+	                    result->score = child_score;
+	                    result->best_move = moves[i];
+	                    result->pv_length = child_result.pv_length + 1;
+	                    
+	                    for(int j = 0; j < child_result.pv_length; j++)
+	                        result->PV[j+1] = child_result.PV[j];
+	                    
+	                    result->PV[0] = moves[i];
 
-                	T->alpha = MAX(T->alpha, child_score); 
-                }
-
-                // break is not allowed in basic parallelisme
-                //if (ALPHA_BETA_PRUNING && child_score >= T->beta)
-                //    break;    
+	                T->alpha = MAX(T->alpha, child_score); 
+                }  
 
 
                 }
 
             }
+
+            // break is not allowed in basic parallelisme
+            if (ALPHA_BETA_PRUNING && child_score >= T->beta)
+                break;  
 
         }
 
