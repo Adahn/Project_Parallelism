@@ -52,24 +52,28 @@ void evaluate(tree_t * T, result_t *result)
 
     if (T->height < 2)
     {
-        #pragma omp parallel
-        #pragma omp single nowait
+        //#pragma omp parallel
+        //#pragma omp single nowait
         for (int i = 0; i < n_moves; i++) {
 
         	
     		tree_t child;
             result_t child_result;
                 
-            // writes in child the obtaining move by playing moves[i]
-            play_move(T, moves[i], &child);
+
         //#pragma omp task shared(child, child_result), untied
-            #pragma omp task firstprivate(child)
+            //#pragma omp task firstprivate(child) private(child_result) shared(result, T)
+            #pragma omp task firstprivate(T) private(child, child_result) shared(result)
             {
+            	//printf("MOVES[%d] = %d  ||| nmoves = %d\n", i, moves[i], n_moves);
+            	// writes in child the obtaining move by playing moves[i]
+            	play_move(T, moves[i], &child);
+                
                 evaluate(&child, &child_result);
 
             //#pragma  omp taskwait
                 int child_score = -child_result.score;
-
+                //printf("child_score[%d] = %d\n", i, child_score);
                 #pragma omp critical
                 {
 	                // if obtained score is better than existing score, replace it
@@ -83,19 +87,21 @@ void evaluate(tree_t * T, result_t *result)
 	                    
 	                    result->PV[0] = moves[i];
 
+                	}  
+
 	                T->alpha = MAX(T->alpha, child_score); 
-                }  
 
-
-                }
+				}
 
             }
 
             // break is not allowed in basic parallelisme
-            if (ALPHA_BETA_PRUNING && child_score >= T->beta)
-                break;  
+            //if (ALPHA_BETA_PRUNING && child_score >= T->beta)
+            //    break;  
 
         }
+
+        #pragma omp taskwait
 
         if (TRANSPOSITION_TABLE)
             tt_store(T, result);
@@ -143,6 +149,9 @@ void decide(tree_t * T, result_t *result)
 		T->beta = MAX_SCORE + 1;
 
 		printf("=====================================\n");
+
+        #pragma omp parallel
+        #pragma omp single nowait
 		evaluate(T, result);
 
 		printf("depth: %d / score: %.2f / best_move : ", T->depth, 0.01 * result->score);
